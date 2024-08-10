@@ -11,6 +11,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<WantedList />} />
+          <Route path="/page/:page" element={<WantedList />} />
           <Route path="/details/:uid" element={<WantedDetail />} />
         </Routes>
       </Router>

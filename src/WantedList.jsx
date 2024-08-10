@@ -6,14 +6,19 @@ import SearchBar from './SearchBar'; // Import the SearchBar component
 function WantedList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [reports, setReports] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // State for current page
+  const [totalPages, setTotalPages] = useState(1); // State for total pages
+
+  const maxVisiblePages = 10; // Maximum number of visible pages in the pagination bar
 
   useEffect(() => {
     const storedReports = JSON.parse(localStorage.getItem('wantedReports')) || [];
     setReports(storedReports);
   }, []);
 
-  const fetchWantedList = async () => {
-    const response = await fetch('https://api.fbi.gov/@wanted');
+  const fetchWantedList = async ({ queryKey }) => {
+    const [, page] = queryKey;
+    const response = await fetch(`https://api.fbi.gov/@wanted?page=${page}`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -21,9 +26,19 @@ function WantedList() {
   };
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ['wantedList'],
+    queryKey: ['wantedList', currentPage], // Pass currentPage as part of the query key
     queryFn: fetchWantedList,
+    keepPreviousData: true, // Keep previous data while fetching new data
   });
+
+  useEffect(() => {
+    if (data && data.total) {
+      // Set total pages based on total results from the API
+      const totalResults = data.total;
+      const resultsPerPage = 20; // Assuming each page contains 20 results
+      setTotalPages(Math.ceil(totalResults / resultsPerPage));
+    }
+  }, [data]);
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -33,9 +48,20 @@ function WantedList() {
     event.preventDefault();
   };
 
-  const filteredItems = data?.items?.filter((item) =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const handleDeleteReport = (index) => {
+    const updatedReports = reports.filter((_, i) => i !== index);
+    setReports(updatedReports);
+    localStorage.setItem('wantedReports', JSON.stringify(updatedReports));
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const filteredItems =
+    data?.items?.filter((item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   if (isLoading) {
     return <p className="text-center text-gray-500">Loading...</p>;
@@ -45,10 +71,19 @@ function WantedList() {
     return <p className="text-center text-red-500">Failed to fetch data</p>;
   }
 
+  // Calculate visible page numbers
+  const startPage = Math.max(currentPage - Math.floor(maxVisiblePages / 2), 1);
+  const endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
+
+  const pageNumbers = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className=" mx-auto p-6">
       <h1 className="text-3xl font-bold text-center mb-8">FBI Wanted List</h1>
-      
+
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
@@ -60,9 +95,17 @@ function WantedList() {
           <h2 className="text-xl font-bold mb-4">Reported Sightings</h2>
           <ul>
             {reports.map((report, index) => (
-              <li key={index} className="mb-2">
-                <strong>UID:</strong> {report.uid} <br />
-                <strong>Description:</strong> {report.description}
+              <li key={index} className="mb-2 flex justify-between items-center">
+                <div>
+                  <strong>UID:</strong> {report.uid} <br />
+                  <strong>Description:</strong> {report.description}
+                </div>
+                <button
+                  onClick={() => handleDeleteReport(index)}
+                  className="text-red-600 hover:underline"
+                >
+                  X
+                </button>
               </li>
             ))}
           </ul>
@@ -72,9 +115,14 @@ function WantedList() {
       {filteredItems.length > 0 ? (
         <ul className="grid gap-6 md:grid-cols-2">
           {filteredItems.map((item) => (
-            <li key={item.uid} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
+            <li
+              key={item.uid}
+              className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+            >
               <Link to={`/details/${item.uid}`} className="block">
-                <h2 className="text-xl font-semibold text-blue-600 mb-2">{item.title}</h2>
+                <h2 className="text-xl font-semibold text-blue-600 mb-2">
+                  {item.title}
+                </h2>
                 {item.images && item.images.length > 0 && (
                   <img
                     src={item.images[0].thumb}
@@ -90,6 +138,55 @@ function WantedList() {
       ) : (
         <p className="text-center text-gray-700">No wanted persons found.</p>
       )}
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-8">
+        {currentPage > 1 && (
+          <button
+            onClick={() => handlePageChange(1)}
+            className="px-4 py-2 mx-1 bg-gray-200 text-gray-700 rounded-md hover:bg-blue-500 transition"
+          >
+            First
+          </button>
+        )}
+        {currentPage > 1 && (
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            className="px-4 py-2 mx-1 bg-gray-200 text-gray-700 rounded-md hover:bg-blue-500 transition"
+          >
+            Previous
+          </button>
+        )}
+        {pageNumbers.map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={`px-4 py-2 mx-1 ${
+              currentPage === page
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700'
+            } rounded-md hover:bg-blue-500 transition`}
+          >
+            {page}
+          </button>
+        ))}
+        {currentPage < totalPages && (
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            className="px-4 py-2 mx-1 bg-gray-200 text-gray-700 rounded-md hover:bg-blue-500 transition"
+          >
+            Next
+          </button>
+        )}
+        {currentPage < totalPages && (
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            className="px-4 py-2 mx-1 bg-gray-200 text-gray-700 rounded-md hover:bg-blue-500 transition"
+          >
+            Last
+          </button>
+        )}
+      </div>
     </div>
   );
 }
