@@ -21,8 +21,8 @@ To run this project locally, follow these steps:
 
 Clone the repository:
 ```bash
-git clone https://github.com/yourusername/fbi-wanted-list.git
-cd fbi-wanted-list
+git clone https://github.com/iLocust/FBIWantedTracker.git
+cd FBIWantedTracker
 ```
 Install dependencies:
 
