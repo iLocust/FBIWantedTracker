@@ -1,12 +1,24 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 
-function SearchBar({ searchQuery, onSearchChange, onSearchSubmit }) {
+function SearchBar({ onSearchSubmit }) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onSearchSubmit(searchQuery);
+  };
+
   return (
-    <form onSubmit={onSearchSubmit} className="mb-6 flex items-center space-x-2">
+    <form onSubmit={handleSubmit} className="mb-6 flex items-center space-x-2">
       <input
         type="text"
         value={searchQuery}
-        onChange={onSearchChange}
+        onChange={handleSearchChange}
         placeholder="Search by name..."
         className="border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:border-blue-400 transition duration-200"
       />
@@ -21,8 +33,6 @@ function SearchBar({ searchQuery, onSearchChange, onSearchSubmit }) {
 }
 
 SearchBar.propTypes = {
-  searchQuery: PropTypes.string.isRequired,
-  onSearchChange: PropTypes.func.isRequired,
   onSearchSubmit: PropTypes.func.isRequired,
 };
 

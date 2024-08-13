@@ -68,7 +68,7 @@ function WantedDetail() {
       <div className="flex flex-col md:flex-row items-start mb-6">
         {data.images && data.images.length > 0 && (
           <img
-            src={data.images[0].large}
+            src={data.images[0].thumb}
             alt={data.title}
             className="size-fit md:w-1/2object-contain rounded-md mb-6 md:mb-0 md:mr-6"
           />
@@ -83,6 +83,9 @@ function WantedDetail() {
           </p>
           <p className="text-white-700 mb-2">
             <strong>Age:</strong> {data.age_range || "N/A"}
+          </p>
+          <p className="text-white-700 mb-2">
+            <strong>Race:</strong> {data.race || "N/A"}
           </p>
           <p className="text-white-700 mb-2">
             <strong>Publication Date:</strong>{" "}
@@ -120,6 +123,16 @@ function WantedDetail() {
           >
             Have you seen this person?
           </button>
+          {data.files && data.files.length > 0 && (
+            <a
+              href={data.files[0].url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-5 mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition inline-block"
+            >
+              Download File
+            </a>
+          )}
         </div>
       </div>
 
@@ -141,13 +154,13 @@ function WantedDetail() {
                 onClick={handleModalClose}
                 className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200"
               >
-                No
+                Cancel
               </button>
               <button
                 onClick={handleReportSubmit}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
               >
-                Yes
+                Submit
               </button>
             </div>
           </div>

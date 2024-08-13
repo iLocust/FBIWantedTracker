@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import SearchBar from "./SearchBar"; // Import the SearchBar component
+import SearchBar from "./SearchBar"; 
+import ReportedSightings from "./ReportedSightings"; 
 
 function WantedList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [reports, setReports] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); // State for current page
-  const [totalPages, setTotalPages] = useState(1); // State for total pages
-  const [isDropdownExpanded, setIsDropdownExpanded] = useState(false); // State for dropdown visibility
+  const [currentPage, setCurrentPage] = useState(1); 
+  const [totalPages, setTotalPages] = useState(1); 
 
-  const maxVisiblePages = 10; // Maximum number of visible pages in the pagination bar
+  const maxVisiblePages = 10;
 
   useEffect(() => {
     const storedReports =
@@ -28,26 +28,20 @@ function WantedList() {
   };
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ["wantedList", currentPage], // Pass currentPage as part of the query key
+    queryKey: ["wantedList", currentPage], 
     queryFn: fetchWantedList,
-    keepPreviousData: true, // Keep previous data while fetching new data
+    keepPreviousData: true, 
   });
 
   useEffect(() => {
     if (data && data.total) {
-      // Set total pages based on total results from the API
       const totalResults = data.total;
-      const resultsPerPage = 20; // Assuming each page contains 20 results
-      setTotalPages(Math.ceil(totalResults / resultsPerPage));
+      setTotalPages(Math.ceil(totalResults / 20));
     }
   }, [data]);
 
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
+  const handleSearchSubmit = (query) => {
+    setSearchQuery(query);
   };
 
   const handleDeleteReport = (index) => {
@@ -58,10 +52,6 @@ function WantedList() {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-  };
-
-  const toggleDropdown = () => {
-    setIsDropdownExpanded(!isDropdownExpanded);
   };
 
   const filteredItems =
@@ -77,7 +67,6 @@ function WantedList() {
     return <p className="text-center text-red-500">Failed to fetch data</p>;
   }
 
-  // Calculate visible page numbers
   const startPage = Math.max(currentPage - Math.floor(maxVisiblePages / 2), 1);
   const endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
 
@@ -90,67 +79,25 @@ function WantedList() {
     <div className="mx-auto px-24 py-4">
       <h1 className="text-3xl font-bold text-center mb-8">FBI Wanted List</h1>
 
-      <SearchBar
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        onSearchSubmit={handleSearchSubmit}
-      />
+      <SearchBar onSearchSubmit={handleSearchSubmit} />
 
       {reports.length > 0 && (
-        <div className="mb-8 bg-gray-100 rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Reported Sightings
-            </h2>
-            <button
-              onClick={toggleDropdown}
-              className="text-blue-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-white-400 rounded transition duration-200"
-            >
-              {isDropdownExpanded ? "Hide" : "Show"}
-            </button>
-          </div>
-          {isDropdownExpanded && reports.length > 0 && (
-            <ul className="mt-4 space-y-4">
-              {reports.map((report, index) => (
-                <li
-                  key={index}
-                  className="flex justify-between items-center p-4 bg-black shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
-                >
-                  <div className="flex items-center">
-                    {report.image && (
-                      <img
-                        src={report.image}
-                        alt={report.title}
-                        className="w-16 h-16 object-cover rounded-full mr-4"
-                      />
-                    )}
-                    <div className="text-white-700">
-                      <p className="font-semibold">{report.title}</p>
-                      <p className="text-sm">{report.description}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteReport(index)}
-                    className="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-400 rounded-full transition-colors duration-200"
-                  >
-                    Delete
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <ReportedSightings
+          reports={reports}
+          onDeleteReport={handleDeleteReport}
+        />
       )}
 
+<div className=" min-h-screen p-6">
       {filteredItems.length > 0 ? (
-        <ul className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredItems.map((item) => (
             <li
               key={item.uid}
-              className="bg-white rounded-lg shadow-md p-5 hover:shadow-xl transition-shadow border border-gray-200"
+              className="bg-zinc-900 rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow border border-gray-700"
             >
               <Link to={`/details/${item.uid}`} className="block">
-                <h2 className="text-xl font-semibold text-blue-600 mb-3 hover:text-blue-800 transition-colors line-clamp-2">
+                <h2 className="text-lg font-semibold text-white mb-4 hover:text-blue-500 transition-colors line-clamp-2">
                   {item.title}
                 </h2>
 
@@ -158,21 +105,24 @@ function WantedList() {
                   <img
                     src={item.images[0].thumb || item.images[0].large}
                     alt={item.title}
-                    className="w-full h-48 object-fill rounded-md mb-4"
+                    className="w-full h-48 object-cover rounded-md mb-4"
                   />
                 )}
-                <p className="text-gray-600 line-clamp-3">{item.description}</p>
+                <p className="text-gray-300 line-clamp-3">
+                  {item.description}
+                </p>
               </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-center text-gray-700 py-6">
+        <p className="text-center text-gray-400 py-6">
           No wanted persons found.
         </p>
       )}
+    </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       <div className="flex justify-center mt-8">
         {currentPage > 1 && (
           <button
