@@ -36,6 +36,6 @@ Start the development server:
 ```bash
 npm run dev
 ```
-This will open the application in your default browser at [http://localhost:3000.](http://localhost:5173/)
+This will open the application in your default browser at [http://localhost:5173.](http://localhost:5173/)
 
 
